@@ -1,8 +1,8 @@
 from construct import (
-    Array, Byte, Bytes, Struct,
-    Switch, Int8ub, Int16ub
+    Array, Byte, Bytes, Rebuild, len_, this,
+    Struct, Switch, Int8ub, Int16ub
 )
-from adapter import MACAdapter
+from .adapters import MACAdapter
 
 alfred_tlv = Struct(
     'type' / Int8ub,

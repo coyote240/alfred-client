@@ -10,22 +10,40 @@ bat_addr = ifaddresses('bat0')[AF_INET6][0]['addr']
 bat_mac = ifaddresses('bat0')[AF_LINK][0]['addr']
 message = str.encode(bat_addr)
 
+'''
+Container:
+    alfred_tlv = Container:
+        type = 0
+        version = 0
+        length = 26
+    packet_body = Container:
+        transaction_id = 1
+        sequence_number = 0
+        alfred_data = ListContainer:
+            Container:
+                source_mac_address = 5e:5c:ce:ca:93:58 (total 17)
+                type = 65
+                version = 0
+                length = 12
+                data = raspberrypi\n (total 12)
+'''
+
 update = alfred_packet.build({
     'alfred_tlv': {
         'type': 0,
         'version': 0,
-        'length': 3
+        'length': 44
     },
     'packet_body': {
         'transaction_id': 1,
-        'sequence_number': 1,
-        'alfred_data': {
+        'sequence_number': 0,
+        'alfred_data': [{
             'source_mac_address': bat_mac,
             'type': 66,
             'version': 0,
             'length': len(message),
             'data': message
-        }
+        }]
     }
 })
 
@@ -43,12 +61,9 @@ status = alfred_packet.build({
 
 
 def read_alfred_socket():
-    with socket.socket(socket.AF_UNIX, socket.SOCKET_STREAM) as s:
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
         s.connect(socket_address)
         s.sendall(update)
-        s.sendall(status)
-        data = s.recv(65535)
-    print(alfred_packet.parse(data))
 
 
 class Application(tornado.web.Application):
@@ -69,7 +84,7 @@ class Application(tornado.web.Application):
                 lambda: tornado.ioloop.IOLoop.instance().stop())
 
     def start(self):
-        tornado.ioloop.PeriodicCallback(read_alfred_socket, 1000).start()
+        tornado.ioloop.PeriodicCallback(read_alfred_socket, 5000).start()
         tornado.ioloop.IOLoop.current().start()
 
 
