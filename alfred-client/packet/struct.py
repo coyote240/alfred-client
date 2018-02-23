@@ -1,5 +1,5 @@
 from construct import (
-    Array, Byte, Bytes, Rebuild, len_, this,
+    Array, Byte, Bytes,
     Struct, Switch, Int8ub, Int16ub
 )
 from .adapters import MACAdapter

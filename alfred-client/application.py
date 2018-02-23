@@ -32,7 +32,7 @@ update = alfred_packet.build({
     'alfred_tlv': {
         'type': 0,
         'version': 0,
-        'length': 44
+        'length': 44            # hyar be dragons
     },
     'packet_body': {
         'transaction_id': 1,
@@ -84,6 +84,9 @@ class Application(tornado.web.Application):
                 lambda: tornado.ioloop.IOLoop.instance().stop())
 
     def start(self):
+        '''
+        This should really point to a task queue
+        '''
         tornado.ioloop.PeriodicCallback(read_alfred_socket, 5000).start()
         tornado.ioloop.IOLoop.current().start()
 
