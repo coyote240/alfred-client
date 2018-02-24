@@ -1,4 +1,4 @@
-from packet.struct import alfred_packet
+from ..packet.struct import alfred_packet
 
 
 class MetaMessage(type):
@@ -65,70 +65,17 @@ class Message(dict):
     @property
     def tlv(self):
         return {
-            'type': self._message_type,
-            'version': self._version,
-            'length': self._length
+            'type': self.type,
+            'version': self.version,
+            'length': self.length
         }
 
-    def _compose(self):
+    def compose(self):
         return {
             'alfred_tlv': self.tlv,
             'packet_body': {}
         }
 
     def __bytes__(self):
-        structure = self._compose()
+        structure = self.compose()
         return alfred_packet.build(structure)
-
-
-@MessageTypeId(0)
-class PushData(Message):
-
-    def __init__(self, container=None):
-        self.source_mac_address = None
-        self._data = []
-        super().__init__(container)
-
-    def add_data_block(self, typeid, version, data):
-        block = {
-            'source_mac_address': self.source_mac_address,
-            'type': self.type,
-            'version': self.version,
-            'length': len(data),
-            'data': bytes(data, 'utf-8')}
-        self._data.append(block)
-
-    def _compose(self):
-        return {
-            'alfred_tlv': self.tlv,
-            'packet_body': {
-                'transaction_id': 0,
-                'sequence_number': 0,
-                'alfred_data': self._data
-            }
-        }
-
-
-@MessageTypeId(1)
-class AnnounceMaster(Message):
-    pass
-
-
-@MessageTypeId(2)
-class Request(Message):
-    pass
-
-
-@MessageTypeId(3)
-class StatusTxEnd(Message):
-    pass
-
-
-@MessageTypeId(4)
-class StatusError(Message):
-    pass
-
-
-@MessageTypeId(5)
-class ModeSwitch(Message):
-    pass

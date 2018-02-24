@@ -16,5 +16,8 @@ setup(
     url='https://github.com/coyote240/alfred-client',
     packages=find_packages(exclude=['tests']),
     install_requires=[
-        'construct~=2.9.32'
-    ])
+        'construct~=2.9.32',
+        'tornado~=4.5.3',
+        'netifaces~=0.10.6'
+    ],
+    tests_require=['nose'])
