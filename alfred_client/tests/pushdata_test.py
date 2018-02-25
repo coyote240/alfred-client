@@ -52,3 +52,13 @@ class TestParsePushData(unittest.TestCase):
 
     def test_message_length(self):
         self.assertEqual(self.message.length, 26)
+
+    def test_transaction_id(self):
+        self.assertEqual(self.message.transaction_id, 0)
+
+    def test_sequence_number(self):
+        self.assertEqual(self.message.sequence_number, 0)
+
+    @unittest.skip('TODO: move _data to packet_body.alfred_data')
+    def test_alfred_data_length(self):
+        self.assertEqual(len(self.message.alfred_data), 1)
