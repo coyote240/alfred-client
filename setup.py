@@ -20,4 +20,5 @@ setup(
         'tornado~=4.5.3',
         'netifaces~=0.10.6'
     ],
-    tests_require=['nose'])
+    tests_require=['nose'],
+    test_suite='alfred_client.tests')
