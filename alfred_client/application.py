@@ -47,18 +47,6 @@ update = alfred_packet.build({
     }
 })
 
-status = alfred_packet.build({
-    'alfred_tlv': {
-        'type': 3,
-        'version': 0,
-        'length': 4
-    },
-    'packet_body': {
-        'transaction_id': 1,
-        'number_of_packets': 1
-    }
-})
-
 
 def read_alfred_socket():
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
