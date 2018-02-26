@@ -38,6 +38,13 @@ class PushData(Message):
     def sequence_number(self, value):
         self.packet_body['sequence_number'] = value
 
+    @property
+    def data(self):
+        frame = bytearray()
+        for block in self.packet_body.alfred_data:
+            frame.extend(block.data)
+        return frame.decode()
+
     def add_data_block(self, typeid, version, data):
         enc_data = bytes(data, 'utf-8')
         len_data = len(enc_data)

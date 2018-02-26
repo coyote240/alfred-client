@@ -1,23 +1,27 @@
-import uuid
 import socket
 import tornado.web
 from tornado import gen
 from tornado.options import options
-from alfred_client.message import Request
+from alfred_client.message import Request, Message
 
 
 class DataHandler(tornado.web.RequestHandler):
 
     @gen.coroutine
     def get(self, datatype=None):
-        txid = uuid.uuid4().hex
+        txid = 1
 
         request = Request()
-        request.requested_type = datatype
+        request.requested_type = int(datatype)
         request.transaction_id = txid
 
         data = yield self.send(bytes(request))
-        self.write(data)
+        message = Message.factory(data)
+        self.write({
+            'type': message.type,
+            'length': message.length,
+            'data': message.data
+        })
 
     @gen.coroutine
     def send(self, packet):

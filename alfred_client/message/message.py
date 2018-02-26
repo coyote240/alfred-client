@@ -17,6 +17,7 @@ class MetaMessage(type):
 
         for message_type in mcs.message_types:
             if message_type._message_type == typeid:
+                print('returning by match', message_type)
                 return message_type(container)
 
         return Message(container)
@@ -32,14 +33,15 @@ class MessageTypeId(object):
         return cls
 
 
-class Message(dict):
+class Message(object, metaclass=MetaMessage):
 
-    __metaclass__ = MetaMessage
-    _message_type = 0
+    _message_type = -1
     _version = 0
     _length = 0
 
     def __init__(self, container=None):
+        super().__init__()
+
         if container is not None:
             self.read(container)
 
