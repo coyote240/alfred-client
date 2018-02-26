@@ -17,7 +17,6 @@ class MetaMessage(type):
 
         for message_type in mcs.message_types:
             if message_type._message_type == typeid:
-                print('returning by match', message_type)
                 return message_type(container)
 
         return Message(container)
