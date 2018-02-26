@@ -28,7 +28,7 @@ class TestMessage(unittest.TestCase):
         self.message = Message()
 
     def test_default_type(self):
-        self.assertEqual(self.message.type, 0)
+        self.assertEqual(self.message.type, -1)
 
     def test_default_version(self):
         self.assertEqual(self.message.version, 0)
@@ -38,7 +38,7 @@ class TestMessage(unittest.TestCase):
 
     def test_tlv(self):
         self.assertEqual(self.message.tlv, {
-            'type': 0,
+            'type': -1,
             'version': 0,
             'length': 0
         })
@@ -47,7 +47,7 @@ class TestMessage(unittest.TestCase):
         comp = self.message.compose()
         self.assertEqual(comp, {
             'alfred_tlv': {
-                'type': 0,
+                'type': -1,
                 'version': 0,
                 'length': 0
             },
