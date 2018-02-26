@@ -15,6 +15,11 @@ setup(
     license='MIT',
     url='https://github.com/coyote240/alfred-client',
     packages=find_packages(exclude=['tests']),
+    entry_points={
+        'console_scripts': [
+            'alfred_client = alfred_client.application:main'
+        ]
+    },
     install_requires=[
         'construct~=2.9.32',
         'tornado~=4.5.3',

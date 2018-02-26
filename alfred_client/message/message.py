@@ -1,4 +1,4 @@
-from ..packet.struct import alfred_packet
+from alfred_client.packet.struct import alfred_packet
 
 
 class MetaMessage(type):

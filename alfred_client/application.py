@@ -1,66 +1,59 @@
 import signal
 import socket
-from netifaces import ifaddresses, AF_INET6, AF_LINK
+from netifaces import ifaddresses, AF_INET, AF_INET6, AF_LINK
 import tornado.web
 import tornado.ioloop
-from packet.struct import alfred_packet
-
-socket_address = '/var/run/alfred.sock'
-bat_addr = ifaddresses('bat0')[AF_INET6][0]['addr']
-bat_mac = ifaddresses('bat0')[AF_LINK][0]['addr']
-message = str.encode(bat_addr)
-
-'''
-Container:
-    alfred_tlv = Container:
-        type = 0
-        version = 0
-        length = 26
-    packet_body = Container:
-        transaction_id = 1
-        sequence_number = 0
-        alfred_data = ListContainer:
-            Container:
-                source_mac_address = 5e:5c:ce:ca:93:58 (total 17)
-                type = 65
-                version = 0
-                length = 12
-                data = raspberrypi\n (total 12)
-'''
-
-update = alfred_packet.build({
-    'alfred_tlv': {
-        'type': 0,
-        'version': 0,
-        'length': 44            # hyar be dragons
-    },
-    'packet_body': {
-        'transaction_id': 1,
-        'sequence_number': 0,
-        'alfred_data': [{
-            'source_mac_address': bat_mac,
-            'type': 66,
-            'version': 0,
-            'length': len(message),
-            'data': message
-        }]
-    }
-})
+from tornado.web import URLSpec
+from tornado.httpserver import HTTPServer
+from tornado.options import define, options
+from alfred_client.message import PushData
+from alfred_client import handlers
 
 
-def read_alfred_socket():
-    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-        s.connect(socket_address)
-        s.sendall(update)
+define('socket_address', type=str, default='/var/run/alfred.sock',
+       help='Path to the alfred socket')
+define('port', type=int, default=8888,
+       help='The port on which this applications web interface will listen.')
+define('bat_interface', type=str, default='bat0',
+       help='The interface on which alfred listens')
+define('web_interface', type=str, default='eth0',
+       help='The interface to which the web application will bind')
+define('config', help='Path to config file',
+       callback=lambda path: options.parse_config_file(path, final=False))
 
 
 class Application(tornado.web.Application):
 
     def __init__(self):
+        self.init_handlers()
         self.init_signal_handlers()
+        settings = self.init_settings()
+        self.init_interfaces()
+
+        super().__init__(self.handlers, **settings)
 
     def init_handlers(self):
-        pass
+        self.handlers = [
+            URLSpec(r'/data/(\d*)',
+                    handlers.DataHandler,
+                    name='Data')]
+
+    def init_settings(self):
+        settings = {
+            'socket_address': options.socket_address,
+            'bat_interface': options.bat_interface,
+            'web_interface': options.web_interface,
+            'port': options.port}
+
+        return settings
+
+    def init_interfaces(self):
+        bat_iface = ifaddresses(options.bat_interface)
+        self.bat_addr = bat_iface[AF_INET6][0]['addr']
+        self.bat_mac = bat_iface[AF_LINK][0]['addr']
+
+        web_iface = ifaddresses(options.web_interface)
+        self.web_addr = web_iface[AF_INET][0]['addr']
 
     def init_signal_handlers(self):
         signal.signal(signal.SIGINT, self.interrupt_handler)
@@ -71,13 +64,25 @@ class Application(tornado.web.Application):
         tornado.ioloop.IOLoop.instance().add_callback_from_signal(
                 lambda: tornado.ioloop.IOLoop.instance().stop())
 
+    def host_info_task(self):
+        host_info = PushData()
+        host_info.source_mac_address = self.bat_mac
+        host_info.add_data_block(66, 0, self.bat_addr)
+
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.connect(options.socket_address)
+            s.sendall(bytes(host_info))
+
     def start(self):
-        '''
-        This should really point to a task queue
-        '''
-        tornado.ioloop.PeriodicCallback(read_alfred_socket, 5000).start()
+        server = HTTPServer(self)
+        server.bind(8888, address=self.web_addr)
+        server.start(0)
+
+        # This should really point to a task queue
+        tornado.ioloop.PeriodicCallback(self.host_info_task, 5000).start()
         tornado.ioloop.IOLoop.current().start()
 
 
-if __name__ == '__main__':
+def main():
+    options.parse_command_line()
     Application().start()
