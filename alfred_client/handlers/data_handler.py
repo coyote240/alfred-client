@@ -8,18 +8,16 @@ from alfred_client.message import Request
 
 class DataHandler(tornado.web.RequestHandler):
 
-    data_type = 66
-
     @gen.coroutine
-    def get(self):
+    def get(self, datatype=None):
         txid = uuid.uuid4().hex
 
         request = Request()
-        request.requested_type = self.data_type
+        request.requested_type = datatype
         request.transaction_id = txid
 
-        peers = yield self.send(bytes(request))
-        self.write(peers)
+        data = yield self.send(bytes(request))
+        self.write(data)
 
     @gen.coroutine
     def send(self, packet):
