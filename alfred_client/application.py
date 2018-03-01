@@ -1,8 +1,10 @@
+import json
 import signal
 import socket
 from netifaces import ifaddresses, AF_INET, AF_INET6, AF_LINK
 import tornado.web
 import tornado.ioloop
+from tornado.iostream import IOStream
 from tornado.web import URLSpec
 from tornado.httpserver import HTTPServer
 from tornado.options import define, options
@@ -12,8 +14,10 @@ from alfred_client import handlers
 
 define('socket_address', type=str, default='/var/run/alfred.sock',
        help='Path to the alfred socket')
-define('port', type=int, default=8888,
-       help='The port on which this applications web interface will listen.')
+define('web_port', type=int, default=8888,
+       help='The port on which this application\'s web interface will listen.')
+define('broadcast_port', type=int, default=9696,
+       help='The port on which app will broadcast UDP host discovery packets')
 define('bat_interface', type=str, default='bat0',
        help='The interface on which alfred listens')
 define('web_interface', type=str, default='eth0',
@@ -43,7 +47,7 @@ class Application(tornado.web.Application):
             'socket_address': options.socket_address,
             'bat_interface': options.bat_interface,
             'web_interface': options.web_interface,
-            'port': options.port}
+            'port': options.web_port}
 
         return settings
 
@@ -54,6 +58,7 @@ class Application(tornado.web.Application):
 
         web_iface = ifaddresses(options.web_interface)
         self.web_addr = web_iface[AF_INET][0]['addr']
+        self.web_broadcast_addr = web_iface[AF_INET][0]['broadcast']
 
     def init_signal_handlers(self):
         signal.signal(signal.SIGINT, self.interrupt_handler)
@@ -69,16 +74,34 @@ class Application(tornado.web.Application):
         host_info.source_mac_address = self.bat_mac
         host_info.add_data_block(66, 0, self.bat_addr)
 
+        if options.socket_address is None:
+            return
+
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
             s.connect(options.socket_address)
             s.sendall(bytes(host_info))
 
+    def discovery_address(self):
+        message = json.dumps({
+            'web_addr': self.web_addr,
+            'web_port': options.web_port
+        })
+        self.discovery_stream.write(bytes(message, 'utf-8'))
+
     def start(self):
         server = HTTPServer(self)
-        server.bind(8888, address=self.web_addr)
-        server.start(0)
+        server.listen(options.web_port, address=self.web_addr)
+
+        udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        self.discovery_stream = IOStream(udp_sock)
+        self.discovery_stream.connect((self.web_broadcast_addr,
+                                       options.broadcast_port))
 
         # This should really point to a task queue
+        tornado.ioloop.PeriodicCallback(self.discovery_address, 5000).start()
         tornado.ioloop.PeriodicCallback(self.host_info_task, 5000).start()
         tornado.ioloop.IOLoop.current().start()
 
