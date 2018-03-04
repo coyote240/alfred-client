@@ -16,7 +16,7 @@ define('socket_address', type=str, default='/var/run/alfred.sock',
        help='Path to the alfred socket')
 define('web_port', type=int, default=8888,
        help='The port on which this application\'s web interface will listen.')
-define('broadcast_port', type=int, default=9696,
+define('broadcast_port', type=int, default=44044,
        help='The port on which app will broadcast UDP host discovery packets')
 define('bat_interface', type=str, default='bat0',
        help='The interface on which alfred listens')
@@ -40,7 +40,10 @@ class Application(tornado.web.Application):
         self.handlers = [
             URLSpec(r'/data/(\d*)',
                     handlers.DataHandler,
-                    name='Data')]
+                    name='Data'),
+            URLSpec(r'/nodeinfo',
+                    handlers.NodeInfoHandler,
+                    name='NodeInfo')]
 
     def init_settings(self):
         settings = {

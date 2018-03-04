@@ -39,6 +39,11 @@ alfred_data_block = Struct(
     'data' / Bytes(lambda ctx: ctx.length)
 )
 
+alfred_transaction_mgmt = Struct(
+    'transaction_id' / Int16ub,
+    'sequence_number' / Int16ub,
+)
+
 alfred_push_data = Struct(
     'transaction_id' / Int16ub,
     'sequence_number' / Int16ub,
