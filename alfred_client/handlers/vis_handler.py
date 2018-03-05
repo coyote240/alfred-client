@@ -6,19 +6,26 @@ from alfred_client.packet import struct
 from alfred_client.message import Request
 
 
-class DataHandler(tornado.web.RequestHandler):
+class VisHandler(tornado.web.RequestHandler):
 
     @gen.coroutine
-    def get(self, datatype=None):
+    def get(self):
         txid = 1
 
         request = Request()
-        request.requested_type = int(datatype)
+        request.requested_type = 1
         request.transaction_id = txid
 
-        data = yield self.send(bytes(request))
+        response = yield self.send(bytes(request))
+        print(response)
+
+        data = [{
+            'source_mac_address': record.source_mac_address,
+            'vis': record.data.decode('utf')
+        } for record in response]
+
         self.write({
-            'data': data
+            'nodes': data
         })
 
     @gen.coroutine
@@ -38,6 +45,6 @@ class DataHandler(tornado.web.RequestHandler):
                 tlv = struct.alfred_tlv.parse(header)
                 body = s.recv(tlv.length)
                 data_block = struct.alfred_push_data.parse(body)
-                retval.append(data_block.alfred_data)
+                retval.append(data_block.alfred_data[0])
 
         raise gen.Return(retval)

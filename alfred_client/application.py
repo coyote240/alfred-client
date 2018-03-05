@@ -38,12 +38,18 @@ class Application(tornado.web.Application):
 
     def init_handlers(self):
         self.handlers = [
+            URLSpec(r'/',
+                    handlers.IndexHandler,
+                    name='Index'),
             URLSpec(r'/data/(\d*)',
                     handlers.DataHandler,
                     name='Data'),
             URLSpec(r'/nodeinfo',
                     handlers.NodeInfoHandler,
-                    name='NodeInfo')]
+                    name='NodeInfo'),
+            URLSpec(r'/vis',
+                    handlers.VisHandler,
+                    name='Vis')]
 
     def init_settings(self):
         settings = {
