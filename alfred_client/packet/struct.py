@@ -61,3 +61,38 @@ alfred_packet = Struct(
         5: alfred_mode_switch
     })
 )
+
+'''
+[Container
+    (source_mac_address='7e:eb:58:b5:ec:ba')
+    (type=1)
+    (version=1)
+    (length=38)
+    (data=b"")]
+'''
+
+vis_test = b"\x00\x00\x00\x00\x00\x00\x01\x03\xb8'\xeb\xa3\n\x19\xb8'\xeb\n\xc0\x9b\x00\xff\xb8'\xeb\xac7\x1d\x00\xff~\xebX\xb5\xec\xba\xff\x00"  # noqa
+
+vis_iface = Struct(
+    'mac' / MACAdapter(Byte[6])
+)
+
+vis_entry = Struct(
+    'mac' / MACAdapter(Byte[6]),
+    'ifindex' / Int8ub,
+    'qual' / Int8ub
+)
+
+vis_v1 = Struct(
+    'mac' / MACAdapter(Byte[6]),
+    'iface_n' / Int8ub,
+    'entries_n' / Int8ub,
+    'ifaces' / Array(lambda ctx: ctx.iface_n, vis_iface),
+    'entries' / Array(lambda ctx: ctx.entries_n, vis_entry)
+)
+
+iface_list_entry = Struct(
+    'name' / Bytes(256),
+    'mac' / MACAdapter(Byte[6]),
+    'devindex' / Int16ub
+)
