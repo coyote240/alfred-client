@@ -17,11 +17,12 @@ class VisHandler(tornado.web.RequestHandler):
         request.transaction_id = txid
 
         response = yield self.send(bytes(request))
-        print(response)
 
         data = [{
             'source_mac_address': record.source_mac_address,
-            'vis': record.data.decode('utf')
+            'type': record.type,
+            'version': record.version,
+            'vis': struct.vis_v1.parse(record.data)
         } for record in response]
 
         self.write({
