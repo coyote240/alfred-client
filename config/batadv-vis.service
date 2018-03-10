@@ -1,0 +1,10 @@
+[Unit]
+Description=batadv-vis
+
+[Service]
+ExecStart=/usr/local/sbin/batadv-vis -i bat0 -s
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

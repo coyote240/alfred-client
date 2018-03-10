@@ -1,0 +1,10 @@
+[Unit]
+Description=alfred
+
+[Service]
+ExecStart=/usr/local/sbin/alfred -i bat0 -m
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
