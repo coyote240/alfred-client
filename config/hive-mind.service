@@ -2,7 +2,7 @@
 Description=Hive Mind
 
 [Service]
-ExecStart=/home/pi/env/alfred-client/bin/alfred_client --config=/home/pi/alfred-client/alfred_client/config.py
+ExecStart=/home/pi/env/bin/alfred_client --config=/home/pi/alfred-client/alfred_client/config.py
 Restart=always
 RestartSec=10s
 
