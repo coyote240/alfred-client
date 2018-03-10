@@ -34,6 +34,10 @@ and then running::
   $ source ./env/bin/activate
   $ python setup.py install
 
+Make a copy of the example config file and edit as needed::
+
+  $ cp alfred_client/example_config.py alfred_client/config.py
+
 And then run the application by calling the provided entry point::
 
   alfred_client --config=config.py
@@ -52,6 +56,7 @@ the following:
 * gcc
 * git
 * python3-dev
+* python3-venv
 * libnl-3-dev
 * libnl-genl-3-dev
 * libcap-dev
