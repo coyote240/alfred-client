@@ -34,10 +34,10 @@ define('config', help='Path to config file',
 class Application(tornado.web.Application):
 
     def __init__(self):
+        self.init_interfaces()
         self.init_handlers()
         self.init_signal_handlers()
         settings = self.init_settings()
-        self.init_interfaces()
         self.init_gpio()
 
         super().__init__(self.handlers, **settings)
@@ -55,7 +55,11 @@ class Application(tornado.web.Application):
                     name='NodeInfo'),
             URLSpec(r'/vis',
                     handlers.VisHandler,
-                    name='Vis')]
+                    name='Vis'),
+            URLSpec(r'/led',
+                    handlers.LEDHandler,
+                    dict(bat_mac=self.bat_mac),
+                    name='LED')]
 
     def init_settings(self):
         settings = {
